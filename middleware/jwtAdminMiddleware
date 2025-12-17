@@ -1,0 +1,37 @@
+const jwt = require("jsonwebtoken");
+
+const jwtAdminMiddleware = (req, res, next) => {
+  console.log("Inside JwtAdminMiddleware");
+
+  const authHeader = req.headers["authorization"];
+
+  if (!authHeader) {
+    return res.status(401).json("Token not provided");
+  }
+
+  const parts = authHeader.split(" ");
+  if (parts.length !== 2 || parts[0] !== "Bearer") {
+    return res.status(401).json("Invalid authorization header format");
+  }
+
+  const token = parts[1];
+  console.log("TOKEN:", token);
+
+  try {
+    const jwtResponse = jwt.verify(token, process.env.secretKey);
+    console.log("JWT RESPONSE =", jwtResponse);
+
+    // FIXED: store entire JWT payload, not just email string
+    req.payload = jwtResponse;
+
+    if (req.payload.userMail === "bookAdmin@gmail.com") {
+      next();
+    } else {
+      res.status(401).json("Invalid User.....");
+    }
+  } catch (err) {
+    return res.status(401).json("invalid token");
+  }
+};
+
+module.exports = jwtAdminMiddleware;
